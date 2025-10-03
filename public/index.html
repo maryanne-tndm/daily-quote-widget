@@ -3,233 +3,140 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Daily Work Quote</title>
+  <title>Tandem Daily Spark ✨</title>
   <style>
     :root {
       --bg: #ffffff;
-      --fg: #0f172a; /* slate-900 */
-      --muted: #6b7280; /* gray-500 */
-      --card: #f8fafc; /* slate-50 */
-      --accent: #2563eb; /* blue-600 */
+      --fg: #0f172a;
+      --muted: #6b7280;
+      --card: #f8fafc;
+      --accent: #2563eb;
       --shadow: 0 10px 25px rgba(2, 6, 23, 0.08);
       --radius: 18px;
     }
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #0b1220;
-        --fg: #e5e7eb; /* gray-200 */
-        --muted: #94a3b8; /* slate-400 */
-        --card: #0f172a; /* slate-900 */
+        --fg: #e5e7eb;
+        --muted: #94a3b8;
+        --card: #0f172a;
         --shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
       }
-    }
-
-    /* Theme overrides via URL params */
-    .theme-dark { --bg:#0b1220; --fg:#e5e7eb; --muted:#94a3b8; --card:#0f172a; }
-    .theme-light { --bg:#ffffff; --fg:#0f172a; --muted:#6b7280; --card:#f8fafc; }
-
-    html, body {
-      height: 100%;
     }
     body {
       margin: 0;
       background: var(--bg);
       color: var(--fg);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell,
-        Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial;
       display: grid;
       place-items: center;
+      height: 100vh;
     }
-
     .card {
       width: min(720px, 95vw);
-      box-sizing: border-box;
       background: var(--card);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 22px 22px 18px 22px;
+      padding: 22px;
       position: relative;
-      overflow: clip;
     }
     .title {
       display: flex;
       align-items: center;
       gap: 10px;
       font-weight: 700;
-      letter-spacing: 0.2px;
       margin: 0 0 8px 0;
-      font-size: 14px;
+      font-size: 16px;
       color: var(--muted);
       text-transform: uppercase;
     }
-    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 25%, transparent); }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
     blockquote {
       margin: 8px 0 2px 0;
       font-size: clamp(18px, 3.2vw, 26px);
       line-height: 1.35;
       font-weight: 600;
-      letter-spacing: 0.2px;
     }
-    .author {
-      margin: 6px 0 0 0;
-      font-size: 14px;
-      color: var(--muted);
-    }
-    .toolbar {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      display: flex;
-      gap: 6px;
-    }
-    .btn {
-      appearance: none;
-      border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent);
-      background: color-mix(in oklab, var(--card) 80%, var(--bg));
-      color: var(--fg);
-      padding: 6px 8px;
-      border-radius: 10px;
-      font-size: 12px;
-      cursor: pointer;
-    }
+    .author { font-size: 14px; color: var(--muted); }
+    .toolbar { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; }
+    .btn { border: 1px solid rgba(0,0,0,0.1); background: var(--card); color: var(--fg); padding: 6px 8px; border-radius: 10px; font-size: 12px; cursor: pointer; }
     .btn:hover { filter: brightness(1.06); }
     .btn:active { transform: translateY(1px); }
-    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-    .fade-in { animation: fade 420ms ease-out; }
-    @keyframes fade { from { opacity: 0; translate: 0 2px; } to { opacity: 1; translate: 0 0; } }
   </style>
 </head>
 <body>
-  <div id="root" class="theme"></div>
-
+  <div id="root"></div>
   <script>
-    (function () {
-      const params = new URLSearchParams(location.search);
-      const theme = params.get('theme'); // "dark" | "light"
-      const accent = params.get('accent'); // URL encoded hex like %23FF6A00 or css color name
-      const title = params.get('title') || 'Daily Work Quote';
-      const source = (params.get('source') || 'local').toLowerCase(); // 'local' | 'api'
-      const tz = params.get('tz') || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const title = 'Tandem Daily Spark ✨';
+    const tz = 'America/New_York'; // Default EST
 
-      // Apply theme
+    const LOCAL_QUOTES = [
+      { q: "Don’t worry about failure; you only have to be right once.", a: "— Drew Houston" },
+      { q: "Move fast and break things. Unless you are breaking stuff, you are not moving fast enough.", a: "— Mark Zuckerberg" },
+      { q: "Timing, perseverance, and ten years of trying will eventually make you look like an overnight success.", a: "— Biz Stone" },
+      { q: "If you’re not embarrassed by the first version of your product, you’ve launched too late.", a: "— Reid Hoffman" },
+      { q: "Stay self-funded as long as possible.", a: "— Garrett Camp" },
+      { q: "Chase the vision, not the money; the money will end up following you.", a: "— Tony Hsieh" },
+      { q: "The way to get started is to quit talking and begin doing.", a: "— Walt Disney" },
+      { q: "It’s fine to celebrate success but it is more important to heed the lessons of failure.", a: "— Bill Gates" },
+      { q: "In a startup, absolutely nothing happens unless you make it happen.", a: "— Marc Andreessen" },
+      { q: "Make every detail perfect and limit the number of details to perfect.", a: "— Jack Dorsey" },
+      { q: "You don’t learn to walk by following rules. You learn by doing, and by falling over.", a: "— Richard Branson" },
+      { q: "Every problem is a gift—without problems we would not grow.", a: "— Tony Robbins" },
+      { q: "Don’t play games that you don’t understand, even if you see lots of other people making money from them.", a: "— Tony Hsieh" },
+      { q: "Failure is simply the opportunity to begin again, this time more intelligently.", a: "— Henry Ford" },
+      { q: "When something is important enough, you do it even if the odds are not in your favor.", a: "— Elon Musk" },
+      { q: "Your most unhappy customers are your greatest source of learning.", a: "— Bill Gates" },
+      { q: "In the middle of difficulty lies opportunity.", a: "— Albert Einstein" },
+      { q: "Fortune favors the brave.", a: "— Virgil" },
+      { q: "Ideas are easy. Implementation is hard.", a: "— Guy Kawasaki" },
+      { q: "Winners are not afraid of losing. But losers are.", a: "— Robert Kiyosaki" },
+      { q: "Screw it, let’s do it.", a: "— Richard Branson" },
+      { q: "Opportunities don’t happen. You create them.", a: "— Chris Grosser" },
+      { q: "Don’t let the fear of losing be greater than the excitement of winning.", a: "— Robert Kiyosaki" },
+      { q: "The way to build something big is to start small.", a: "— Paul Graham" },
+      { q: "Do not be embarrassed by your failures, learn from them and start again.", a: "— Richard Branson" },
+      { q: "It always seems impossible until it’s done.", a: "— Nelson Mandela" },
+      { q: "Fall seven times and stand up eight.", a: "— Japanese Proverb" },
+      { q: "The last 10% it takes to launch something takes as much energy as the first 90%.", a: "— Rob Kalin" },
+      { q: "Courage is grace under pressure.", a: "— Ernest Hemingway" },
+      { q: "The secret of getting ahead is getting started.", a: "— Mark Twain" }
+    ];
+
+    let idx = 0;
+
+    function render() {
       const root = document.getElementById('root');
-      if (theme === 'dark') root.classList.add('theme-dark');
-      if (theme === 'light') root.classList.add('theme-light');
-      if (accent) document.documentElement.style.setProperty('--accent', accent);
+      const quote = LOCAL_QUOTES[idx];
+      root.innerHTML = `
+        <div class="card">
+          <div class="toolbar">
+            <button class="btn" id="copy">Copy</button>
+            <button class="btn" id="next">Next</button>
+          </div>
+          <h2 class="title"><span class="dot"></span> ${title}</h2>
+          <blockquote>“${quote.q}”</blockquote>
+          <p class="author">${quote.a}</p>
+        </div>`;
 
-      /** Local curated quotes — safe for work. Edit or add your own. */
-      const LOCAL_QUOTES = [
-        { q: 'Small daily improvements lead to stunning results.', a: '— Robin Sharma' },
-        { q: 'Done is better than perfect.', a: '— Sheryl Sandberg' },
-        { q: 'What gets scheduled gets done.', a: '— Michael Hyatt' },
-        { q: 'Focus is the art of knowing what to ignore.', a: '— James Clear' },
-        { q: 'If it’s not on the calendar, it doesn’t exist.', a: '— Unknown' },
-        { q: 'Start where you are. Use what you have. Do what you can.', a: '— Arthur Ashe' },
-        { q: 'Slow is smooth, smooth is fast.', a: '— U.S. Navy SEALs maxim' },
-        { q: 'The secret to getting ahead is getting started.', a: '— Mark Twain' },
-        { q: 'Make it simple. Make it memorable.', a: '— Leo Burnett' },
-        { q: 'Quality means doing it right when no one is looking.', a: '— Henry Ford' },
-      ];
+      document.getElementById('copy').onclick = () => {
+        const text = `${quote.q} ${quote.a}`;
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+      };
 
-      // Deterministic index from date
-      function indexForDate(dateISO, len) {
-        let h = 0;
-        for (let i = 0; i < dateISO.length; i++) h = Math.imul(31, h) + dateISO.charCodeAt(i) | 0;
-        return Math.abs(h) % len;
-      }
+      document.getElementById('next').onclick = () => {
+        idx = (idx + 1) % LOCAL_QUOTES.length;
+        render();
+      };
+    }
 
-      // Local storage helpers (cache per day & timezone)
-      function todayKey() {
-        const now = new Date();
-        try {
-          // Format date in the chosen timezone as YYYY-MM-DD
-          const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' });
-          const parts = fmt.formatToParts(now);
-          const y = parts.find(p=>p.type==='year').value;
-          const m = parts.find(p=>p.type==='month').value;
-          const d = parts.find(p=>p.type==='day').value;
-          return `${y}-${m}-${d}`;
-        } catch {
-          // Fallback to local date
-          return now.toISOString().slice(0,10);
-        }
-      }
-
-      async function getQuote() {
-        const key = `dq:${tz}:${todayKey()}`;
-        const cached = localStorage.getItem(key);
-        if (cached) return JSON.parse(cached);
-
-        let quote;
-        if (source === 'api') {
-          try {
-            // ZenQuotes daily endpoint; swap to any API you prefer.
-            const res = await fetch('https://zenquotes.io/api/today');
-            if (res.ok) {
-              const data = await res.json();
-              const item = Array.isArray(data) ? data[0] : data;
-              quote = { q: item.q || item.quote || 'Stay focused, stay kind.', a: `— ${item.a || item.author || 'Unknown'}` };
-            }
-          } catch (e) {
-            /* Network/API failed — fall back to local */
-          }
-        }
-
-        if (!quote) {
-          const idx = indexForDate(todayKey(), LOCAL_QUOTES.length);
-          quote = LOCAL_QUOTES[idx];
-        }
-
-        localStorage.setItem(key, JSON.stringify(quote));
-        return quote;
-      }
-
-      function msUntilNextLocalMidnight() {
-        const now = new Date();
-        const tzNow = new Date(now.toLocaleString('en-US', { timeZone: tz }));
-        const midnight = new Date(tzNow);
-        midnight.setHours(24,0,0,0);
-        return midnight - tzNow;
-      }
-
-      function render(quote) {
-        root.innerHTML = `
-          <div class="card fade-in" role="group" aria-label="Daily quote">
-            <div class="toolbar">
-              <button class="btn" id="copy" title="Copy quote"><span class="sr-only">Copy</span>Copy</button>
-              <button class="btn" id="refresh" title="Refresh (new day)"><span class="sr-only">Refresh</span>Refresh</button>
-            </div>
-            <h2 class="title"><span class="dot" aria-hidden="true"></span> ${title}</h2>
-            <blockquote>“${quote.q}”</blockquote>
-            <p class="author">${quote.a}</p>
-          </div>`;
-
-        document.getElementById('copy').onclick = async () => {
-          try { await navigator.clipboard.writeText(`${quote.q} ${quote.a}`); } catch {}
-        };
-        document.getElementById('refresh').onclick = () => {
-          // Clear cache and re-render (useful if embedding timezone or at midnight)
-          const keyPrefix = `dq:${tz}:`;
-          Object.keys(localStorage).forEach(k => { if (k.startsWith(keyPrefix)) localStorage.removeItem(k); });
-          boot();
-        };
-      }
-
-      async function boot() {
-        const q = await getQuote();
-        render(q);
-
-        // Auto-refresh at next midnight for the chosen timezone
-        const delay = msUntilNextLocalMidnight();
-        setTimeout(() => {
-          const keyPrefix = `dq:${tz}:`;
-          Object.keys(localStorage).forEach(k => { if (k.startsWith(keyPrefix)) localStorage.removeItem(k); });
-          boot();
-        }, Math.max(1000, delay));
-      }
-
-      boot();
-    })();
+    render();
   </script>
 </body>
 </html>
