@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tandem Daily Spark ✨</title>
+  <title>Tandem Daily Spark</title>
   <style>
     :root {
       --bg: #ffffff;
@@ -15,60 +15,28 @@
       --radius: 18px;
     }
     @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0b1220;
-        --fg: #e5e7eb;
-        --muted: #94a3b8;
-        --card: #0f172a;
-        --shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
-      }
+      :root { --bg:#0b1220; --fg:#e5e7eb; --muted:#94a3b8; --card:#0f172a; --shadow:0 10px 25px rgba(0,0,0,0.45); }
     }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--fg);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial;
-      display: grid;
-      place-items: center;
-      height: 100vh;
-    }
-    .card {
-      width: min(720px, 95vw);
-      background: var(--card);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 22px;
-      position: relative;
-    }
-    .title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 700;
-      margin: 0 0 8px 0;
-      font-size: 16px;
-      color: var(--muted);
-      text-transform: uppercase;
-    }
-    .sparkle { width: 22px; height: 22px; object-fit: cover; border-radius: 50%; display: inline-block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15)); } @media (prefers-reduced-motion: reduce) { .sparkle { animation: none !important; } }
-    blockquote {
-      margin: 8px 0 2px 0;
-      font-size: clamp(18px, 3.2vw, 26px);
-      line-height: 1.35;
-      font-weight: 600;
-    }
-    .author { font-size: 14px; color: var(--muted); }
-    .toolbar { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; }
-    .btn { border: 1px solid rgba(0,0,0,0.1); background: var(--card); color: var(--fg); padding: 6px 8px; border-radius: 10px; font-size: 12px; cursor: pointer; }
-    .btn:hover { filter: brightness(1.06); }
-    .btn:active { transform: translateY(1px); }
+    body { margin:0; background:var(--bg); color:var(--fg); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial; display:grid; place-items:center; min-height:100vh; }
+    .card { width:min(720px,95vw); background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:22px; position:relative; }
+    .title { display:flex; align-items:center; gap:10px; font-weight:700; margin:0 0 8px 0; font-size:16px; color:var(--muted); text-transform:uppercase; }
+    .sparkle { width:22px; height:22px; object-fit:cover; border-radius:50%; display:inline-block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15)); }
+    blockquote { margin:8px 0 2px 0; font-size:clamp(18px,3.2vw,26px); line-height:1.35; font-weight:600; }
+    .author { font-size:14px; color:var(--muted); }
+    .toolbar { position:absolute; top:10px; right:10px; display:flex; gap:6px; }
+    .btn { border:1px solid rgba(0,0,0,0.1); background:var(--card); color:var(--fg); padding:6px 8px; border-radius:10px; font-size:12px; cursor:pointer; }
+    .btn:hover { filter:brightness(1.06); }
+    .btn:active { transform:translateY(1px); }
   </style>
 </head>
 <body>
   <div id="root"></div>
   <script>
-    const title = 'Tandem Daily Spark';
-    const tz = 'America/New_York'; // Default EST
+    // Defaults (overridable via URL params)
+    const params = new URLSearchParams(location.search);
+    const title = params.get('title') || 'Tandem Daily Spark';
+    const tz = params.get('tz') || 'America/New_York'; // EST default
+    const sparkleURL = params.get('sparkle') || 'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExY2VueHVidWxkM2FtZGlrMXR3YnVxMGt2ejVmc202YzZ0ZGM4dm4ybCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/hqDeZrQogBnxWaJC5v/giphy.gif';
 
     const LOCAL_QUOTES = [
       { q: "Don’t worry about failure; you only have to be right once.", a: "— Drew Houston" },
@@ -103,40 +71,94 @@
       { q: "The secret of getting ahead is getting started.", a: "— Mark Twain" }
     ];
 
-    let idx = 0;
+    function fmtDateTZ(date) {
+      try {
+        const parts = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(date);
+        const y = parts.find(p=>p.type==='year').value;
+        const m = parts.find(p=>p.type==='month').value;
+        const d = parts.find(p=>p.type==='day').value;
+        return `${y}-${m}-${d}`;
+      } catch { return new Date().toISOString().slice(0,10); }
+    }
 
-    function render() {
+    function indexForDate(dateISO, len) {
+      let h = 0; for (let i=0;i<dateISO.length;i++) h = Math.imul(31, h) + dateISO.charCodeAt(i) | 0; return Math.abs(h) % len;
+    }
+
+    function msUntilNextMidnightTZ() {
+      const now = new Date();
+      const localInTZ = new Date(now.toLocaleString('en-US', { timeZone: tz }));
+      const midnight = new Date(localInTZ); midnight.setHours(24,0,0,0);
+      return midnight - localInTZ;
+    }
+
+    function getState() {
+      const today = fmtDateTZ(new Date());
+      const keyPrefix = `dq:${tz}:${today}`;
+      const idxKey = `${keyPrefix}:idx`;
+      let idx = parseInt(localStorage.getItem(idxKey), 10);
+      if (Number.isNaN(idx)) {
+        idx = indexForDate(today, LOCAL_QUOTES.length);
+        localStorage.setItem(idxKey, String(idx));
+      }
+      return { today, keyPrefix, idx };
+    }
+
+    function setIdx(state, idx) {
+      localStorage.setItem(`${state.keyPrefix}:idx`, String(idx));
+    }
+
+    function render(state) {
       const root = document.getElementById('root');
-      const quote = LOCAL_QUOTES[idx];
+      const quote = LOCAL_QUOTES[state.idx];
       root.innerHTML = `
-        <div class="card">
+        <div class="card" role="group" aria-label="Daily quote">
           <div class="toolbar">
-            <button class="btn" id="copy">Copy</button>
-            <button class="btn" id="next">Next</button>
+            <button class="btn" id="prev" type="button" title="Previous">Prev</button>
+            <button class="btn" id="next" type="button" title="Next">Next</button>
           </div>
-          <h2 class="title"><img class="sparkle" src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExdGF0ZnNqZnppdnZibW5hYWJuODZvdmR0bTNtZHh2c29hYzdkbXo5ayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/tqMW2dDp0hCAJuQguY/giphy.gif" alt="" loading="lazy" referrerpolicy="no-referrer" /> ${title}</h2>
+          <h2 class="title"><img class="sparkle" src="${sparkleURL}" alt="" loading="lazy" referrerpolicy="no-referrer" /> ${title}</h2>
           <blockquote>“${quote.q}”</blockquote>
           <p class="author">${quote.a}</p>
         </div>`;
 
-      document.getElementById('copy').onclick = () => {
-        const text = `${quote.q} ${quote.a}`;
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.style.position = 'fixed'; ta.style.opacity = '0';
-        ta.select();
-        document.execCommand('copy');
-        ta.remove();
+      document.getElementById('prev').onclick = () => {
+        state.idx = (state.idx - 1 + LOCAL_QUOTES.length) % LOCAL_QUOTES.length;
+        setIdx(state, state.idx); render(state);
       };
-
       document.getElementById('next').onclick = () => {
-        idx = (idx + 1) % LOCAL_QUOTES.length;
-        render();
+        state.idx = (state.idx + 1) % LOCAL_QUOTES.length;
+        setIdx(state, state.idx); render(state);
       };
     }
 
-    render();
+    function boot() {
+      let state = getState();
+      render(state);
+
+      // Reset at next midnight in chosen timezone
+      const delay = Math.max(1000, msUntilNextMidnightTZ());
+      setTimeout(() => {
+        // Clear only today’s index so a new day re-seeds from date
+        state = getState();
+        render(state);
+      }, delay);
+
+      // If the tab is resumed next day, detect and refresh
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          const currentDay = fmtDateTZ(new Date());
+          if (currentDay !== state.today) { state = getState(); render(state); }
+        }
+      });
+
+      // Sync across multiple open embeds
+      window.addEventListener('storage', (e) => {
+        if (e.key && e.key.startsWith(`dq:${tz}:`)) { state = getState(); render(state); }
+      });
+    }
+
+    boot();
   </script>
 </body>
 </html>
